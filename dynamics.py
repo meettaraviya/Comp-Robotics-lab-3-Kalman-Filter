@@ -13,6 +13,7 @@ Q = None
 # 4x4
 R = None
 
+# Adrian
 def f_transition(s, u, w_noise):
 	w_noise_l, w_noise_r = w_noise
 	omega_l, omega_r = u
@@ -21,7 +22,7 @@ def f_transition(s, u, w_noise):
 	s_ = x_, y_, theta_
 	return s_
 
-
+# Andrew
 def h_observation(s, v_noise):
 	x, y, theta = s
 	# uses get_wall_distances
@@ -29,7 +30,7 @@ def h_observation(s, v_noise):
 	o = d_front, d_right, theta_o, omega_o
 	return o
 
-
+# Andrew
 def generate_v_noise():
 
 	return v_noise
@@ -38,16 +39,20 @@ def generate_v_noise():
 def get_front_wall(s):
 	x, y, theta = s
 	d_r, d_t, d_l, d_b = get_wall_distances(s)
+	positive_ds = [d for d in [d_r, d_t, d_l, d_b] if d>0]
+	dist = min(positive_ds)
 	# 0 = right wall
 	# 1 = top wall
 	# 2 = left wall
 	# 3 = bottom wall
-	return 0/1/2/3
+	return [d_r, d_t, d_l, d_b].index(dist)
 
+# Meet
 def get_W(s, u):
 	# 3x2
 	return W
 
+# Meet
 def get_F(s, u):
 	# 3x3
 	return F
@@ -68,17 +73,18 @@ def get_H_b(s):
 
 	return H
 
-
+# Yuanyuan
 def get_H(s):
 	# 4x3
 	return H
 
+# Yuanyuan
 def get_V(s):
 	# 4x4
 	return V
 
 
-
+# Yuanyuan
 def get_wall_distances(s):
 	x, y, theta = s
 
