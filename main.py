@@ -11,10 +11,11 @@ def get_action(t):
 # Andrew
 def get_next_state(s, u):
 	'''
-	Return the true next state.
+	Return the true next state, after wheel slippage.
 	'''
-	# noisy function
-	w_noise = [np.random.rand(), np.random.rand()]
+	# effective wheel speed is normal with standard deviation of 5% max motor speed
+	w_noise = np.random.normal(0, 0.05*60, 2)
+
 	s_ = f_transition(s, u, w_noise)
 	return s_
 
@@ -65,4 +66,10 @@ if __name__ == "__main__":
 			assert(np.sign(h[3]) == sign[u.index(action)])
 			print(state, action, h)
 	print("Ending h_observation tests.")
-	
+	print("-------------------------------------------")
+	print("Starting generate_v_noise tests.")
+	for state in s:
+		for action in u:
+			v = generate_v_noise(state, action)
+			print(v)
+	print("Ending generate_v_noise tests.")

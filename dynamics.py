@@ -1,3 +1,5 @@
+import numpy as np
+
 # map height
 H = 500.0
 # map width
@@ -19,6 +21,9 @@ def f_transition(s, u, w_noise):
 	omega_l, omega_r = u
 	x, y, theta = s
 
+	# effective inputs after wheel slippage/noise
+	omega_l, omega_r = omega_l + w_noise_l, omega_r + w_noise_r
+	print(omega_l, omega_r)
 	s_ = x_, y_, theta_
 	return s_
 
@@ -69,13 +74,35 @@ def h_observation(s, u, v_noise):
 	theta_o += theta_noise
 	omega_o += omega_noise
 
-	o = (front_o, right_o, theta_o, omega_o)
+	o = front_o, right_o, theta_o, omega_o
 	return o
 
 # Andrew
-def generate_v_noise(s):
-	
-	v_noise = (front_noise, right_noise, theta_noise, omega_noise)
+def generate_v_noise(s, u):
+	x, y, theta = s
+	omega_l, omega_r = u
+	laser_accuracy = 0.04
+	gyro_accuracy = 0.03
+	magn_accuracy = 0.625
+
+	distances = get_wall_distances(s)	# d_r, d_t, d_l, d_b
+	i = get_front_wall(s)				# returns index of front wall
+	d_front = distances[i]
+	d_right = distances[(i-1)%4]
+
+	front_noise = np.random.normal(0, laser_accuracy*d_front, 1)[0]
+	right_noise = np.random.normal(0, laser_accuracy*d_right, 1)[0]
+
+	robot_width = 90.0 #mm
+	wheel_radius = 25.0 #mm
+	v_l = (-60/60.0) * (3.14*2*wheel_radius)
+	v_r = (60/60.0) * (3.14*2*wheel_radius)
+	max_omega = (v_r - v_l)/robot_width
+
+	omega_noise = np.random.normal(0, gyro_accuracy*max_omega, 1)[0]
+	theta_noise = np.random.normal(0, magn_accuracy*2*np.pi, 1)[0]
+
+	v_noise = front_noise, right_noise, theta_noise, omega_noise
 	return v_noise
 
 
@@ -131,6 +158,6 @@ def get_V(s):
 def get_wall_distances(s):
 	x, y, theta = s
 
-	d_r, d_t, d_l, d_b = (1,1,1,1)	#DELETE THIS LINE ONCE IMPLEMENTED
+	d_r, d_t, d_l, d_b = 1,1,1,1	#DELETE THIS LINE ONCE IMPLEMENTED
 	
 	return d_r, d_t, d_l, d_b
