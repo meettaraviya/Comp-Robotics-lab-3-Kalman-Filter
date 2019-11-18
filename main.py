@@ -27,6 +27,9 @@ def KalmanFilter():
 	# 3x3
 	Sigma = None
 
+	display_state(s)
+	display_distribution(s_mean, Sigma)
+
 	for t in range(T):
 
 		u = get_action(t)
@@ -42,6 +45,11 @@ def KalmanFilter():
 
 		Sigma_ = F * Sigma * F.T + W * Q * W.T
 
+
+		display_state(s_)
+		display_distribution(s_mean_, Sigma_)
+		display_update()
+
 		# observation update
 		o = h_observation(s_, u, generate_v_noise(s_))
 
@@ -54,8 +62,16 @@ def KalmanFilter():
 		Sigma = Sigma__
 		s = s_
 
+		display_state(s_)
+		display_distribution(s_mean__, Sigma__)
+		display_update()
 
-if __name__ == "__main__":
+
+
+tester = "meet"
+
+if __name__ == "__main__" and tester == "andrew":
+	# Andrew's testing space
 	print("Starting h_observation tests.")
 	s = [(0,0,0)]
 	u = [(0,0), (60,60), (-60,-60), (60,-60), (-60,60), (40,20), (-30,30), (0,1)]
@@ -73,3 +89,12 @@ if __name__ == "__main__":
 			v = generate_v_noise(state, action)
 			print(v)
 	print("Ending generate_v_noise tests.")
+
+elif __name__ == "__main__" and tester == "meet":
+	pass
+
+elif __name__ == "__main__" and tester == "yy":
+	pass
+
+elif __name__ == "__main__" and tester == "adrian":
+	pass

@@ -1,12 +1,37 @@
 import numpy as np
 
 # map height
-H = 500.0
+map_height = 500.0
 # map width
-W = 500.0
+map_width = 500.0
+
+robot_width = 90.0 #mm
+wheel_radius = 25.0 #mm
 
 fps = 60.0
+playspeed = 1.0
 dt = 1/fps
+
+# C                B       A
+# |----------------========|
+# |                        |
+# |                        |
+# |                   o    | ---> Front when h = 0  
+# |                        |
+# |                        |
+# |----------------========|
+# F                E       D
+# 
+# o = Origin
+# [A, B, C, D, E, F]
+robot_points = [
+	(+wheel_radius , -robot_width/2 ),
+	(-wheel_radius , -robot_width/2 ),
+	(-(robot_height - wheel_radius) , -robot_width/2 ),
+	(+wheel_radius , +robot_width/2 ),
+	(-wheel_radius , +robot_width/2 ),
+	(-(robot_height - wheel_radius) , +robot_width/2 ),
+]
 
 
 # 2x2
@@ -50,10 +75,9 @@ def h_observation(s, u, v_noise):
 	theta_o = theta
 
 	# compute omega based on current action
-	robot_width = 90.0 #mm
-	wheel_radius = 25.0 #mm
-	v_l = (omega_l/60.0) * (3.14*2*wheel_radius)
-	v_r = (omega_r/60.0) * (3.14*2*wheel_radius)
+
+	v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
+	v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
 
 	omega_o = (v_r - v_l)/robot_width
 	
@@ -120,11 +144,35 @@ def get_front_wall(s):
 # Meet
 def get_W(s, u):
 	# 3x2
+	x, y, theta = s
+	omega_l, omega_r = u
+	W = np.matrix(np.zeros((3,2)))
+
+	W[0] = dt * wheel_radius * np.cos(theta) / 2.0
+	W[1] = dt * wheel_radius * np.sin(theta) / 2.0
+	W[2, 0] = -dt * wheel_radius / robot_width
+	W[2, 1] = dt * wheel_radius / robot_width
+
 	return W
 
 # Meet
 def get_F(s, u):
 	# 3x3
+	x, y, theta = s
+	omega_l, omega_r = u
+	# (del s_)/(del x)
+	F = np.matrix(np.zeros((3,3)))
+	# (del s_)/(del y)
+	F[:,0] = [[1.0], [0.0], [0.0]]
+	# (del s_)/(del theta)
+	F[:,1] = [[0.0], [1.0], [0.0]]
+	
+	# (del theta_)/(del theta)
+	F[2,2] = 1.0
+	# (del x_)/(del theta)
+	F[0,2] = -np.sin(theta) * dt * wheel_radius * (omega_l+omega_r) / 2.0
+	# (del y_)/(del theta)
+	F[1,2] = np.cos(theta) * dt * wheel_radius * (omega_l+omega_r) / 2.0
 	return F
 
 
@@ -161,3 +209,45 @@ def get_wall_distances(s):
 	d_r, d_t, d_l, d_b = 1,1,1,1	#DELETE THIS LINE ONCE IMPLEMENTED
 	
 	return d_r, d_t, d_l, d_b
+
+
+def display_init():
+	global , background
+	pygame.init()
+	screen = pygame.display.set_mode((round(map_width), round(map_height)))
+	pygame.display.set_caption('Kalman Fiter demo')
+	background = pygame.Surface(screen.get_size())
+	background = background.convert()
+	background.fill((255, 255, 255, 100))
+	screen.blit(background, (0, 0))
+
+
+def display_state(s):
+	x, y, h = s
+	t_points = [
+		(x+p[0]*np.cos(h)-p[1]*np.sin(h), y+p[0]*np.sin(h)+p[1]*np.cos(h)) for p in robot_points
+	]
+	pygame.draw.line(screen, (255,0,0), t_points[0], t_points[2])
+	pygame.draw.line(screen, (255,0,0), t_points[3], t_points[5])
+	pygame.draw.line(screen, (255,0,0), t_points[0], t_points[3])
+	pygame.draw.line(screen, (255,0,0), t_points[2], t_points[5])
+
+	pygame.draw.line(screen, (0,0,255), t_points[0], t_points[1], 3)
+	pygame.draw.line(screen, (0,0,255), t_points[3], t_points[4], 3)
+
+
+def display_sample_state(s):
+	x, y, h = s
+	pygame.draw.circle(screen, (0,255,0), (round(x), round(y)), 10)
+	pygame.draw.line(screen, (0,255,0), (round(x), round(y)), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), 4)
+
+
+def display_distribution(s_mean, Sigma):
+	for state in np.random.multivariate_normal(s_mean, Sigma, 100):
+		display_sample_state(state)
+
+
+def display_update():
+	pygame.display.flip()
+	clock.tick(round(fps * playspeed))
+	screen.blit(background, (0, 0))
