@@ -176,39 +176,123 @@ def get_F(s, u):
 	return F
 
 
-def get_H_r(s):
-	return H
+# Yuanyuan
+def get_H_for_front(wall_sel, s):
+    x, y, theta = s
+    H = map_height
+    W = map_width
+    pi = np.pi
+    angle_theta = ((theta/pi) % 2 ) *pi 
+    if angle_theta < 0:
+        angle_theta = angle_theta + 2*pi
 
-def get_H_t(s):
+    rows = [[-1/np.cos(angle_theta), 0, (W-x)*np.tan(angle_theta)/np.cos(angle_theta)],
+            [0, -1/np.cos(angle_theta-0.5*pi), (H-y)*np.tan(angle_theta-0.5*pi)/np.cos(angle_theta-0.5*pi)],
+            [1/np.cos(angle_theta-pi), 0, x*np.tan(angle_theta-pi)/np.cos(angle_theta-pi)],
+            [0, 1/np.cos(angle_theta-1.5*pi), y*np.tan(angle_theta-1.5*pi)/np.cos(angle_theta-1.5*pi)]]
+    
+    return rows[wall_sel]
 
-	return H
+#Yuanyuan
+def get_H_for_right(wall_sel, s):
+    x, y, theta = s
+    H = map_height
+    W = map_width
+    pi = np.pi
+    angle_theta = ((theta/pi) % 2 ) *pi 
+    if angle_theta < 0:
+        angle_theta = angle_theta + 2*pi
 
-def get_H_l(s):
-
-	return H
-
-def get_H_b(s):
-
-	return H
+    rows = [[-1/np.cos(angle_theta-0.5*pi), 0, (W-x)*np.tan(angle_theta-0.5*pi)/np.cos(angle_theta-0.5*pi)],
+            [0, -1/np.cos(angle_theta-pi), (H-y)*np.tan(angle_theta-pi)/np.cos(angle_theta-pi)],
+            [1/np.cos(angle_theta-1.5*pi), 0, x*np.tan(angle_theta-1.5*pi)/np.cos(angle_theta-1.5*pi)],
+            [0, 1/np.cos(angle_theta), y*np.tan(angle_theta)/np.cos(angle_theta)]]
+    
+    return rows[wall_sel]
 
 # Yuanyuan
 def get_H(s):
-	# 4x3
-	return H
+    # 4x3
+    x, y, theta = s
+    front_wall_sel = get_front_wall(s)
+    right_wall_sel = get_front_wall([x, y, theta-0.5*np.pi])
+    # 0 = right wall
+    # 1 = top wall
+    # 2 = left wall
+    # 3 = bottom wall
+    d_front = get_H_for_front(front_wall_sel,s)
+    d_right = get_H_for_right(right_wall_sel,s)
+
+    n_theta = [0,0,1]
+    omega = [0, 0, 0] #since omega is independent of x,y,theta; the derivative should be 0
+
+    H = [d_front, d_right, n_theta, omega]
+
+
+    return H
+
 
 # Yuanyuan
 def get_V(s):
-	# 4x4
-	return V
+    # 4x4
+    V = [[1,0,0,0],
+         [0,1,0,0],
+         [0,0,1,0],
+         [0,0,0,1]]
+
+    return V
 
 
 # Yuanyuan
 def get_wall_distances(s):
-	x, y, theta = s
+    x, y, theta = s
+    pi = np.pi
 
-	d_r, d_t, d_l, d_b = 1,1,1,1	#DELETE THIS LINE ONCE IMPLEMENTED
-	
-	return d_r, d_t, d_l, d_b
+    H = map_height
+    W = map_width
+    
+    angle_theta = ((theta/pi) % 2 ) *pi 
+    if angle_theta < 0:
+        angle_theta = angle_theta + 2*pi
+
+    if angle_theta in [0, pi, 2*pi]:
+        d_t = np.inf
+        d_b = np.inf
+        d_r = W-x
+        d_l = -x
+        if angle_theta == pi:
+            d_r = -d_r
+            d_l = -d_l
+    elif angle_theta in [0.5*pi, 1.5*pi]:
+        d_r = np.inf
+        d_l = np.inf
+        d_t = H-y
+        d_b = -y
+        if angle_theta == 1.5*pi:
+            d_t = -d_t
+            d_b = -d_b
+    elif angle_theta >= 0 and angle_theta <= 0.5*pi:
+        d_r = (W-x)  / np.cos(angle_theta)
+        d_l = -x     / np.cos(angle_theta)	
+        d_t = (H-y)  / np.cos(angle_theta-0.5*pi)
+        d_b = -y     / np.cos(angle_theta-0.5*pi)
+    elif angle_theta >= 0.5*pi and angle_theta <= pi:
+        d_r = -(W-x) / np.cos(angle_theta-pi)
+        d_l =  x     / np.cos(angle_theta-pi)
+        d_t = (H-y)  / np.cos(angle_theta-0.5*pi)
+        d_b = -y     / np.cos(angle_theta-0.5*pi)
+    elif angle_theta >= pi and angle_theta <= 1.5*pi:
+        d_r = -(W-x) / np.cos(angle_theta-pi)
+        d_l =  x     / np.cos(angle_theta-pi)
+        d_t = -(H-y) / np.cos(angle_theta-1.5*pi)
+        d_b =  y     / np.cos(angle_theta-1.5*pi)
+    elif angle_theta >= 1.5*pi and angle_theta <= 2*pi:
+        d_r = (W-x)  / np.cos(angle_theta)
+        d_l = -x     / np.cos(angle_theta)
+        d_t = -(H-y) / np.cos(angle_theta-1.5*pi)
+        d_b =  y     / np.cos(angle_theta-1.5*pi)
+
+    return d_r, d_t, d_l, d_b
 
 
 def display_init():
