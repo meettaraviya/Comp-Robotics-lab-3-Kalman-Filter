@@ -1,4 +1,5 @@
 import numpy as np
+import pygame
 
 # map height
 map_height = 500.0
@@ -6,11 +7,14 @@ map_height = 500.0
 map_width = 500.0
 
 robot_width = 90.0 #mm
+robot_height = 100.0
 wheel_radius = 25.0 #mm
 
 fps = 60.0
 playspeed = 1.0
 dt = 1/fps
+
+point_size = 10
 
 # C                B       A
 # |----------------========|
@@ -48,7 +52,7 @@ def f_transition(s, u, w_noise):
 
 	# effective inputs after wheel slippage/noise
 	omega_l, omega_r = omega_l + w_noise_l, omega_r + w_noise_r
-	print(omega_l, omega_r)
+	
 	s_ = x_, y_, theta_
 	return s_
 
@@ -110,9 +114,11 @@ def generate_v_noise(s, u):
 	magn_accuracy = 0.625
 
 	distances = get_wall_distances(s)	# d_r, d_t, d_l, d_b
-	i = get_front_wall(s)				# returns index of front wall
-	d_front = distances[i]
-	d_right = distances[(i-1)%4]
+	s_rotated = (x, y, theta - np.pi/2)
+	distances_rot = get_wall_distances(s_rotated)	# d_r, d_t, d_l, d_b
+
+	d_front = distances[get_front_wall(s)]
+	d_right = distances_rot[get_front_wall(s_rotated)]
 
 	front_noise = np.random.normal(0, laser_accuracy*d_front, 1)[0]
 	right_noise = np.random.normal(0, laser_accuracy*d_right, 1)[0]
@@ -296,7 +302,7 @@ def get_wall_distances(s):
 
 
 def display_init():
-	global , background
+	global screen, background
 	pygame.init()
 	screen = pygame.display.set_mode((round(map_width), round(map_height)))
 	pygame.display.set_caption('Kalman Fiter demo')
@@ -322,8 +328,8 @@ def display_state(s):
 
 def display_sample_state(s):
 	x, y, h = s
-	pygame.draw.circle(screen, (0,255,0), (round(x), round(y)), 10)
-	pygame.draw.line(screen, (0,255,0), (round(x), round(y)), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), 4)
+	pygame.draw.circle(screen, (0,255,0), (round(float(x)), round(float(y))), 10)
+	pygame.draw.line(screen, (0,255,0), (round(float(x)), round(float(y))), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), 4)
 
 
 def display_distribution(s_mean, Sigma):

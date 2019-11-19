@@ -5,7 +5,9 @@ np.random.seed(0)
 
 # Adrian
 def get_action(t):
-
+	omega_l = 30
+	omega_r = 10
+	
 	return omega_l, omega_r
 
 # Andrew
@@ -25,11 +27,13 @@ def KalmanFilter():
 	s_mean = s_initial
 
 	# 3x3
-	Sigma = None
+	Sigma = np.zeros((3,3))
 
-	display_state(s)
+	display_init()
+	display_state(s_initial)
 	display_distribution(s_mean, Sigma)
 
+	T = 1000
 	for t in range(T):
 
 		u = get_action(t)
@@ -91,6 +95,7 @@ if __name__ == "__main__" and tester == "andrew":
 	print("Ending generate_v_noise tests.")
 
 elif __name__ == "__main__" and tester == "meet":
+	KalmanFilter()
 	pass
 
 elif __name__ == "__main__" and tester == "yy":
