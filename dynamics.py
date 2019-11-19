@@ -230,7 +230,7 @@ def get_H(s):
     d_right = get_H_for_right(right_wall_sel,s)
 
     n_theta = [0,0,1]
-    omega = [0, 0, 0] #since omega is independent of x,y,theta; the derivative should be 0
+    omega = [0, 0, 1/dt] #since omega is independent of x,y,theta; the derivative should be 0
 
     H = [d_front, d_right, n_theta, omega]
 
