@@ -235,7 +235,7 @@ def get_H(s):
     H = [d_front, d_right, n_theta, omega]
 
 
-    return H
+    return np.matrix(H)
 
 
 # Yuanyuan
@@ -246,7 +246,7 @@ def get_V(s):
          [0,0,1,0],
          [0,0,0,1]]
 
-    return V
+    return np.matrix(V)
 
 
 # Yuanyuan
