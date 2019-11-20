@@ -81,49 +81,51 @@ def KalmanFilter():
 	s = s_initial
 	print(s)
 
-	T = 10000
-	for t in range(T):
+	T = 100
 
-		u = get_action(s, t)
+	with open(input('Output file name: '), 'w') as file:
+		file.write('t, (d_front, d_right, theta, omega), (omega_l, omega_r), (x, y, theta), (x_estimate, y_estimate, theta_estimate)\n')
+		for t in range(T):
 
-		if not u:
-			break
-	
-		# just used for getting the observation
-		s_ = get_next_state(s, u)
-
-		# time update
-		s_mean_ = f_transition(s_mean, u, (0,0))
+			u = get_action(s, t)
 		
-		F = get_F(s_mean, u)
-		W = get_W(s_mean, u)
+			# just used for getting the observation
+			s_ = get_next_state(s, u)
 
-		Sigma_ = F * Sigma * F.T + W * Q * W.T
+			# time update
+			s_mean_ = f_transition(s_mean, u, (0,0))
+			
+			F = get_F(s_mean, u)
+			W = get_W(s_mean, u)
 
-		display_distribution(s_mean_, Sigma_)
-		display_state(s_)
-		if not display_update():
-			break
+			Sigma_ = F * Sigma * F.T + W * Q * W.T
 
-		# observation update
-		o = h_observation(s_, u, generate_v_noise(s_, u))
+			display_state(s_)
+			display_distribution(s_mean_, Sigma_)
+			if not display_update():
+				break
 
-		H = get_H(s_mean_)
+			# observation update
+			o = h_observation(s_, u, generate_v_noise(s_, u))
 
-		update = Sigma_ * H.T * (H * Sigma_ * H.T + R).I * (o - h_observation(s_mean_, u, (0,0,0,0)))
-		s_mean__ = s_mean_ + update.reshape(1,3)
-		Sigma__ = Sigma_ - Sigma_ * H.T * (H * Sigma_ * H.T + R).I * H * Sigma_
+			H = get_H(s_mean_)
 
-		s_mean = np.asarray(s_mean__).reshape(-1)
-		Sigma = Sigma__
-		s = s_
-		
-		display_distribution(s_mean, Sigma)
-		display_state(s_)
-		if not display_update():
-			break
+			update = Sigma_ * H.T * (H * Sigma_ * H.T + R).I * (o - h_observation(s_mean_, u, (0,0,0,0)))
+			s_mean__ = s_mean_ + update.reshape(1,3)
+			Sigma__ = Sigma_ - Sigma_ * H.T * (H * Sigma_ * H.T + R).I * H * Sigma_
 
-		print(t+1, s, s_mean)
+			s_mean = np.asarray(s_mean__).reshape(-1)
+			Sigma = Sigma__
+			s = s_
+			
+			display_state(s_)
+			display_distribution(s_mean, Sigma)
+			if not display_update():
+				break
+
+			print(t)
+			file.write('%d, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f\n' % 
+						(t, o[0], o[1], o[2], o[3], u[0], u[1], s[0], s[1], s[2], s_mean[0], s_mean[1], s_mean[2]))
 
 
 if __name__ == "__main__":
