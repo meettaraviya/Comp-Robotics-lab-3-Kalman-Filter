@@ -128,7 +128,7 @@ def h_observation(s, u, v_noise):
 	theta_o += theta_noise
 	omega_o += omega_noise
 
-	o = front_o, right_o, theta_o, omega_o
+	o = front_o, right_o, theta_o % (2*np.pi), omega_o
 	return np.array(o).reshape(4,1)
 
 # Andrew
