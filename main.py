@@ -2,7 +2,7 @@ import numpy as np
 from dynamics import *
 from trajectories import *
 
-def get_action(t):
+def get_action(s, t):
 	# # Case 1
 	# # omega_l = 60
 	# # omega_r = 40
@@ -25,10 +25,10 @@ def get_action(t):
 
 	# # print(omega_l, omega_r)
 
-	# x, y, theta = s
+	x, y, theta = s
 
-	# if x < 0 or x > map_width or y < 0 or y > map_height:
-	# 	return None
+	if x < 0 or x > map_width or y < 0 or y > map_height:
+		return None
 	
 	# return omega_l, omega_r
 

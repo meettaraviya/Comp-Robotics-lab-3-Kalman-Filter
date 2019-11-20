@@ -48,15 +48,10 @@ Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] ) * error_scale_w
 # Q = np.matrix( [[0, 0], [0, 0]] )
 
 # 4x4
-<<<<<<< HEAD
 laser_accuracy = 0.04 * error_scale_v
 gyro_accuracy = 0.03 * error_scale_v
 magn_accuracy = 0.0625 * error_scale_v
-=======
-laser_accuracy = 0.04
-gyro_accuracy = 0.03
-magn_accuracy = 0.0625
->>>>>>> a91606d765282ee8771506959ee6a7ca3bc559ce
+
 
 max_dist = np.sqrt( map_height**2 + map_width**2 )
 

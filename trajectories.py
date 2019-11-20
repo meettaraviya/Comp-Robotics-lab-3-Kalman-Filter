@@ -18,7 +18,7 @@ def straight_line(t):
         else:
             sequence.append((0, 0))
 
-    return sequence[t]
+    return sequence[t%100]
 
 def square(t):
     sequence = []
@@ -46,7 +46,7 @@ def square(t):
             sequence.append((54, -54))
         else:
             sequence.append((0,0))
-    return sequence[t]
+    return sequence[t%100]
 
 def circle(t):
     return -60, 60
