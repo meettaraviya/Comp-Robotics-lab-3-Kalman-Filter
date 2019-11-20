@@ -39,10 +39,23 @@ robot_points = [
 
 
 # 2x2
-Q = None
+Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] )
 
 # 4x4
-R = None
+laser_accuracy = 0.04
+gyro_accuracy = 0.03
+magn_accuracy = 0.625
+
+max_dist = np.sqrt( map_height**2 + map_width**2 )
+
+v_l = (-60/60.0) * (3.14*2*wheel_radius)
+v_r = (60/60.0) * (3.14*2*wheel_radius)
+max_omega = (v_r - v_l)/robot_width
+
+R = np.matrix( [[laser_accuracy*max_dist, 0, 0, 0], 
+				[0, laser_accuracy*max_dist, 0, 0], 
+				[0, 0, magn_accuracy*2*np.pi, 0], 
+				[0, 0, 0, gyro_accuracy*max_omega]] )
 
 # Adrian
 def f_transition(s, u, w_noise):
@@ -53,8 +66,18 @@ def f_transition(s, u, w_noise):
 	# effective inputs after wheel slippage/noise
 	omega_l, omega_r = omega_l + w_noise_l, omega_r + w_noise_r
 	
+	v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
+	v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
+	omega = (v_r - v_l)/robot_width
+
+	v = (v_l + v_r) / 2
+	
+	theta_ = theta + (dt*omega)
+	x_ = x + (dt * v * np.cos(theta))
+	y_ = y + (dt * v * np.sin(theta))
+
 	s_ = x_, y_, theta_
-	return s_
+	return np.array(s_)
 
 # Andrew
 def h_observation(s, u, v_noise):
@@ -68,12 +91,14 @@ def h_observation(s, u, v_noise):
 	omega_l, omega_r = u
 	front_noise, right_noise, theta_noise, omega_noise = v_noise
 	
+	s_rotated = (x, y, (theta - np.pi/2)%(2*np.pi))
+
 	# uses get_wall_distances
 	distances = get_wall_distances(s)	# d_r, d_t, d_l, d_b
-	i = get_front_wall(s)				# returns index of front wall
+	distances_rot = get_wall_distances(s_rotated)	# d_r, d_t, d_l, d_b
 
-	front_o = distances[i]
-	right_o = distances[(i-1)%4]		# right wall is at index (i-1) mod 4
+	front_o = distances[get_front_wall(s)]
+	right_o = distances_rot[get_front_wall(s_rotated)]		# right wall is at index (i-1) mod 4
 
 	# state heading is observed heading (before adding noise)
 	theta_o = theta
@@ -103,15 +128,12 @@ def h_observation(s, u, v_noise):
 	omega_o += omega_noise
 
 	o = front_o, right_o, theta_o, omega_o
-	return o
+	return np.array(o).reshape(4,1)
 
 # Andrew
 def generate_v_noise(s, u):
 	x, y, theta = s
 	omega_l, omega_r = u
-	laser_accuracy = 0.04
-	gyro_accuracy = 0.03
-	magn_accuracy = 0.625
 
 	distances = get_wall_distances(s)	# d_r, d_t, d_l, d_b
 	s_rotated = (x, y, theta - np.pi/2)
@@ -120,20 +142,18 @@ def generate_v_noise(s, u):
 	d_front = distances[get_front_wall(s)]
 	d_right = distances_rot[get_front_wall(s_rotated)]
 
+	v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
+	v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
+	omega_o = abs((v_r - v_l)/robot_width)
+
 	front_noise = np.random.normal(0, laser_accuracy*d_front, 1)[0]
 	right_noise = np.random.normal(0, laser_accuracy*d_right, 1)[0]
 
-	robot_width = 90.0 #mm
-	wheel_radius = 25.0 #mm
-	v_l = (-60/60.0) * (3.14*2*wheel_radius)
-	v_r = (60/60.0) * (3.14*2*wheel_radius)
-	max_omega = (v_r - v_l)/robot_width
-
-	omega_noise = np.random.normal(0, gyro_accuracy*max_omega, 1)[0]
+	omega_noise = np.random.normal(0, gyro_accuracy*omega_o, 1)[0]
 	theta_noise = np.random.normal(0, magn_accuracy*2*np.pi, 1)[0]
 
 	v_noise = front_noise, right_noise, theta_noise, omega_noise
-	return v_noise
+	return np.array(v_noise).reshape(4,1)
 
 
 def get_front_wall(s):
@@ -302,7 +322,7 @@ def get_wall_distances(s):
 
 
 def display_init():
-	global screen, background
+	global screen, background, clock
 	pygame.init()
 	screen = pygame.display.set_mode((round(map_width), round(map_height)))
 	pygame.display.set_caption('Kalman Fiter demo')
@@ -310,9 +330,11 @@ def display_init():
 	background = background.convert()
 	background.fill((255, 255, 255, 100))
 	screen.blit(background, (0, 0))
+	clock = pygame.time.Clock()
 
 
 def display_state(s):
+	global screen
 	x, y, h = s
 	t_points = [
 		(x+p[0]*np.cos(h)-p[1]*np.sin(h), y+p[0]*np.sin(h)+p[1]*np.cos(h)) for p in robot_points
@@ -327,6 +349,7 @@ def display_state(s):
 
 
 def display_sample_state(s):
+	global screen
 	x, y, h = s
 	pygame.draw.circle(screen, (0,255,0), (round(float(x)), round(float(y))), 10)
 	pygame.draw.line(screen, (0,255,0), (round(float(x)), round(float(y))), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), 4)
@@ -338,6 +361,7 @@ def display_distribution(s_mean, Sigma):
 
 
 def display_update():
+	global clock, screen
 	pygame.display.flip()
 	clock.tick(round(fps * playspeed))
 	screen.blit(background, (0, 0))
