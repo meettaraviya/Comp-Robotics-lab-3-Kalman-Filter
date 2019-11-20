@@ -5,17 +5,16 @@
 def straight_line(t):
     sequence = []
 
-    # travel about 250 mm
     for i in range(15):
-        sequence.append((60,60))
-
-    # then stop
-    for i in range(15, 20):
-        sequence.append((0, 0))
-
-    # drive backwards
-    for i in range(20, 35):
-        sequence.append((-60, -60))
+        # travel about 250 mm
+        if i < 15:
+            sequence.append((60,60))
+        # then stop
+        elif 15 <= i < 20:
+            sequence.append((0, 0))
+        # drive backwards
+        elif 20 <= i < 35:
+            sequence.append((-60, -60))
 
     return sequence[t]
 
