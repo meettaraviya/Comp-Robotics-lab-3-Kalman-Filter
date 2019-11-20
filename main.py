@@ -87,7 +87,7 @@ def KalmanFilter():
 		file.write('t, (d_front, d_right, theta, omega), (omega_l, omega_r), (x, y, theta), (x_estimate, y_estimate, theta_estimate)\n')
 		for t in range(T):
 
-			u = get_action(t)
+			u = get_action(s, t)
 		
 			# just used for getting the observation
 			s_ = get_next_state(s, u)

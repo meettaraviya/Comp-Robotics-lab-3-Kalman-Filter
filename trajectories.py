@@ -16,6 +16,7 @@ def straight_line(t):
         return (0, 0)
 
 def square(t):
+
     if t < 10:  #drive straight
         return (60,60)
     elif 10 <= t < 15:  #rotate
