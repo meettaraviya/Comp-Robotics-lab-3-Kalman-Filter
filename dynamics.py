@@ -34,12 +34,12 @@ point_size = 2
 # o = Origin
 # [A, B, C, D, E, F]
 robot_points = [
-	(+wheel_radius , -robot_width/2 ),
-	(-wheel_radius , -robot_width/2 ),
-	(-(robot_height - wheel_radius) , -robot_width/2 ),
 	(+wheel_radius , +robot_width/2 ),
 	(-wheel_radius , +robot_width/2 ),
 	(-(robot_height - wheel_radius) , +robot_width/2 ),
+	(+wheel_radius , -robot_width/2 ),
+	(-wheel_radius , -robot_width/2 ),
+	(-(robot_height - wheel_radius) , -robot_width/2 ),
 ]
 
 
@@ -48,9 +48,15 @@ Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] ) * error_scale_w
 # Q = np.matrix( [[0, 0], [0, 0]] )
 
 # 4x4
+<<<<<<< HEAD
 laser_accuracy = 0.04 * error_scale_v
 gyro_accuracy = 0.03 * error_scale_v
 magn_accuracy = 0.0625 * error_scale_v
+=======
+laser_accuracy = 0.04
+gyro_accuracy = 0.03
+magn_accuracy = 0.0625
+>>>>>>> a91606d765282ee8771506959ee6a7ca3bc559ce
 
 max_dist = np.sqrt( map_height**2 + map_width**2 )
 
@@ -78,7 +84,7 @@ def f_transition(s, u, w_noise):
 
 	v = (v_l + v_r) / 2
 	
-	theta_ = theta + (dt*omega)
+	theta_ = (theta + (dt*omega)) % (2*np.pi)
 	x_ = x + (dt * v * np.cos(theta))
 	y_ = y + (dt * v * np.sin(theta))
 
@@ -375,7 +381,7 @@ def display_update():
 	pygame.display.flip()
 	clock.tick(round(fps * playspeed))
 	screen.blit(background, (0, 0))
-	
+
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			return False

@@ -1,38 +1,43 @@
 import numpy as np
 from dynamics import *
+from trajectories import *
 
-# Adrian
-def get_action(s, t):
+def get_action(t):
+	# # Case 1
+	# # omega_l = 60
+	# # omega_r = 40
+
+	# # Case 2
+	# # omega_l = 60
+	# # omega_r = 30
+
+	# # Case 3
+	# # omega_l = 60
+	# # omega_r = 60
+
+	# # Case 4
+	# # omega_l = 60
+	# # omega_r = -60
+
+	# # Case 5
+	# omega_l = 25 * np.cos(2*np.pi*t/180)
+	# omega_r = 25 * np.sin(np.pi*t/180)
+
+	# # print(omega_l, omega_r)
+
+	# x, y, theta = s
+
+	# if x < 0 or x > map_width or y < 0 or y > map_height:
+	# 	return None
 	
-	# Case 1
-	# omega_l = 60
-	# omega_r = 40
+	# return omega_l, omega_r
 
-	# Case 2
-	# omega_l = 60
-	# omega_r = 30
-
-	# Case 3
-	# omega_l = 60
-	# omega_r = 60
-
-	# Case 4
-	# omega_l = 60
-	# omega_r = -60
-
-	# Case 5
-	omega_l = 25 * np.cos(2*np.pi*t/180)
-	omega_r = 25 * np.sin(np.pi*t/180)
-
-	# print(omega_l, omega_r)
-
-	x, y, theta = s
-
-	if x < 0 or x > map_width or y < 0 or y > map_height:
-		return None
+	# return straight_line(t)
+	# return circle(t)
+	# return no_movement(t)
+	# return big_circle(t)
+	return square(t)
 	
-	return omega_l, omega_r
-
 
 # Andrew
 def get_next_state(s, u):
@@ -56,14 +61,16 @@ def KalmanFilter():
 	s_initial = np.array([100,250, np.pi/2])
 	
 	# case 1: initial state known exactly
-	# s_mean = s_initial
-	# Sigma = np.zeros((3,3))
+	s_mean = s_initial
+	Sigma = np.zeros((3,3))
 
 	# case 2: uncertain initial state knowledge
 	s_mean = s_initial
 	Sigma = np.eye(3)
 	Sigma[0,0] = 20
 	Sigma[1,1] = 20
+	# s_mean = s_initial
+	# Sigma = 10*np.ones((3,3))
 
 	display_init()
 	display_distribution(s_mean, Sigma)
@@ -72,6 +79,7 @@ def KalmanFilter():
 		return
 
 	s = s_initial
+	print(s)
 
 	T = 10000
 	for t in range(T):
@@ -115,40 +123,8 @@ def KalmanFilter():
 		if not display_update():
 			break
 
-		print(t)
+		print(t+1, s, s_mean)
 
 
-tester = "meet"
-
-if __name__ == "__main__" and tester == "andrew":
-	# Andrew's testing space
-	print("Starting h_observation tests.")
-	s = [(0,0,0)]
-	u = [(0,0), (60,60), (-60,-60), (60,-60), (-60,60), (40,20), (-30,30), (0,1)]
-	sign = [0, 0, 0, -1, +1, -1, +1, +1]
-	for state in s:
-		for action in u:
-			h = h_observation(state,action,(0,0,0,0))
-			assert(np.sign(h[3]) == sign[u.index(action)])
-			print(state, action, h)
-	print("Ending h_observation tests.")
-	print("-------------------------------------------")
-	print("Starting generate_v_noise tests.")
-	for state in s:
-		for action in u:
-			v = generate_v_noise(state, action)
-			print(v)
-	print("Ending generate_v_noise tests.")
-
-	display_init()
-	display_sample_state((0,0,0))
-
-elif __name__ == "__main__" and tester == "meet":
+if __name__ == "__main__":
 	KalmanFilter()
-	pass
-
-elif __name__ == "__main__" and tester == "yy":
-	pass
-
-elif __name__ == "__main__" and tester == "adrian":
-	pass
