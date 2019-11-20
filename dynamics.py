@@ -29,12 +29,12 @@ point_size = 4
 # o = Origin
 # [A, B, C, D, E, F]
 robot_points = [
-	(+wheel_radius , -robot_width/2 ),
-	(-wheel_radius , -robot_width/2 ),
-	(-(robot_height - wheel_radius) , -robot_width/2 ),
 	(+wheel_radius , +robot_width/2 ),
 	(-wheel_radius , +robot_width/2 ),
 	(-(robot_height - wheel_radius) , +robot_width/2 ),
+	(+wheel_radius , -robot_width/2 ),
+	(-wheel_radius , -robot_width/2 ),
+	(-(robot_height - wheel_radius) , -robot_width/2 ),
 ]
 
 
@@ -366,7 +366,7 @@ def display_update():
 	pygame.display.flip()
 	clock.tick(round(fps * playspeed))
 	screen.blit(background, (0, 0))
-	
+
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT:
 			return False

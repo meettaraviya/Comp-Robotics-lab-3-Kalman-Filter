@@ -1,15 +1,16 @@
 import numpy as np
 from dynamics import *
+from trajectories import *
 
 np.random.seed(0)
 
-# Adrian
 def get_action(t):
-	omega_l = 60
-	omega_r = 0
+	# return straight_line(t)
+	# return circle(t)
+	# return no_movement(t)
+	# return big_circle(t)
+	return square(t)
 	
-	return omega_l, omega_r
-
 # Andrew
 def get_next_state(s, u):
 	'''
@@ -22,7 +23,7 @@ def get_next_state(s, u):
 
 
 def KalmanFilter():
-	s_initial = np.array([100,250, 0])
+	s_initial = np.array([250,250, 0])
 	
 	# case 1: initial state known exactly
 	s_mean = s_initial
@@ -81,7 +82,6 @@ def KalmanFilter():
 			break
 
 		print(t+1, s, s_mean)
-
 
 
 if __name__ == "__main__":
