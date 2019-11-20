@@ -1,6 +1,8 @@
 import numpy as np
 import pygame
 
+np.random.seed(0)
+
 # map height
 map_height = 500.0
 # map width
@@ -10,11 +12,14 @@ robot_width = 90.0 #mm
 robot_height = 100.0
 wheel_radius = 25.0 #mm
 
-fps = 10.0
-playspeed = 0.1
+error_scale_w = 1.0 # environment uncertainty
+error_scale_v = 1.0 # sensor uncertainty
+
+fps = 60.0
+playspeed = 1
 dt = 1/fps
 
-point_size = 4
+point_size = 2
 
 # C                B       A
 # |----------------========|
@@ -39,13 +44,13 @@ robot_points = [
 
 
 # 2x2
-Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] )
+Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] ) * error_scale_w
 # Q = np.matrix( [[0, 0], [0, 0]] )
 
 # 4x4
-laser_accuracy = 0.04
-gyro_accuracy = 0.03
-magn_accuracy = 0.625
+laser_accuracy = 0.04 * error_scale_v
+gyro_accuracy = 0.03 * error_scale_v
+magn_accuracy = 0.0625 * error_scale_v
 
 max_dist = np.sqrt( map_height**2 + map_width**2 )
 
@@ -143,14 +148,14 @@ def generate_v_noise(s, u):
 	d_front = distances[get_front_wall(s)]
 	d_right = distances_rot[get_front_wall(s_rotated)]
 
-	# v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
-	# v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
-	# omega_o = abs((v_r - v_l)/robot_width)
+	v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
+	v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
+	omega_o = abs((v_r - v_l)/robot_width)
 
 	front_noise = np.random.normal(0, laser_accuracy*d_front, 1)[0]
 	right_noise = np.random.normal(0, laser_accuracy*d_right, 1)[0]
 
-	omega_noise = np.random.normal(0, gyro_accuracy*max_omega, 1)[0]
+	omega_noise = np.random.normal(0, gyro_accuracy*omega_o, 1)[0]
 	theta_noise = np.random.normal(0, magn_accuracy*2*np.pi, 1)[0]
 
 	v_noise = front_noise, right_noise, theta_noise, omega_noise
@@ -251,7 +256,8 @@ def get_H(s):
 	d_right = get_H_for_right(right_wall_sel,s)
 
 	n_theta = [0,0,1]
-	omega = [0, 0, 1/dt] #since omega is independent of x,y,theta; the derivative should be 0
+	# omega = [0, 0, 1/dt] #since omega is independent of x,y,theta; the derivative should be 0
+	omega = [0, 0, 0] #since omega is independent of x,y,theta; the derivative should be 0
 
 	H = [d_front, d_right, n_theta, omega]
 
@@ -348,17 +354,20 @@ def display_state(s):
 	pygame.draw.line(screen, (0,0,255), t_points[0], t_points[1], 3)
 	pygame.draw.line(screen, (0,0,255), t_points[3], t_points[4], 3)
 
+	display_sample_state(s, color=(255,0,0))
 
-def display_sample_state(s):
-	global screen
+
+def display_sample_state(s, color=(128,128,128)):
+	# global screen
 	x, y, h = s
-	pygame.draw.circle(screen, (0,255,0), (round(float(x)), round(float(y))), point_size)
-	pygame.draw.line(screen, (0,255,0), (round(float(x)), round(float(y))), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), point_size//2)
+	pygame.draw.circle(screen, color, (round(float(x)), round(float(y))), point_size)
+	pygame.draw.line(screen, color, (round(float(x)), round(float(y))), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), point_size//2)
 
 
 def display_distribution(s_mean, Sigma):
-	for state in np.random.multivariate_normal(s_mean, Sigma, 10):
+	for state in np.random.multivariate_normal(s_mean, Sigma, 30):
 		display_sample_state(state)
+	display_sample_state(s_mean, color=(0,0,0))
 
 
 def display_update():

@@ -1,14 +1,38 @@
 import numpy as np
 from dynamics import *
 
-np.random.seed(0)
-
 # Adrian
-def get_action(t):
-	omega_l = 60
-	omega_r = 60
+def get_action(s, t):
+	
+	# Case 1
+	# omega_l = 60
+	# omega_r = 40
+
+	# Case 2
+	# omega_l = 60
+	# omega_r = 30
+
+	# Case 3
+	# omega_l = 60
+	# omega_r = 60
+
+	# Case 4
+	# omega_l = 60
+	# omega_r = -60
+
+	# Case 5
+	omega_l = 25 * np.cos(2*np.pi*t/180)
+	omega_r = 25 * np.sin(np.pi*t/180)
+
+	# print(omega_l, omega_r)
+
+	x, y, theta = s
+
+	if x < 0 or x > map_width or y < 0 or y > map_height:
+		return None
 	
 	return omega_l, omega_r
+
 
 # Andrew
 def get_next_state(s, u):
@@ -22,7 +46,14 @@ def get_next_state(s, u):
 
 
 def KalmanFilter():
-	s_initial = np.array([100,250, 0])
+
+	# very interesting phenomenon
+	# np.random.seed(0)
+
+	# very interesting phenomenon
+	# np.random.seed(10)
+
+	s_initial = np.array([100,250, np.pi/2])
 	
 	# case 1: initial state known exactly
 	# s_mean = s_initial
@@ -30,20 +61,25 @@ def KalmanFilter():
 
 	# case 2: uncertain initial state knowledge
 	s_mean = s_initial
-	Sigma = 10*np.ones((3,3))
+	Sigma = np.eye(3)
+	Sigma[0,0] = 20
+	Sigma[1,1] = 20
 
 	display_init()
-	display_state(s_initial)
 	display_distribution(s_mean, Sigma)
+	display_state(s_initial)
 	if not display_update():
 		return
 
 	s = s_initial
 
-	T = 100
+	T = 10000
 	for t in range(T):
 
-		u = get_action(t)
+		u = get_action(s, t)
+
+		if not u:
+			break
 	
 		# just used for getting the observation
 		s_ = get_next_state(s, u)
@@ -56,8 +92,8 @@ def KalmanFilter():
 
 		Sigma_ = F * Sigma * F.T + W * Q * W.T
 
-		display_state(s_)
 		display_distribution(s_mean_, Sigma_)
+		display_state(s_)
 		if not display_update():
 			break
 
@@ -74,8 +110,8 @@ def KalmanFilter():
 		Sigma = Sigma__
 		s = s_
 		
-		display_state(s_)
 		display_distribution(s_mean, Sigma)
+		display_state(s_)
 		if not display_update():
 			break
 
