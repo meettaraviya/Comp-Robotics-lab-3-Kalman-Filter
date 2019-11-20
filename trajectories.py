@@ -46,7 +46,7 @@ def square(t):
             sequence.append((54, -54))
         else:
             sequence.append((0,0))
-    return sequence[t%100]
+    return sequence[t%60]
 
 def circle(t):
     return -60, 60

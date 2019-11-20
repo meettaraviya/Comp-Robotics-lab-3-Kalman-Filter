@@ -15,7 +15,7 @@ wheel_radius = 25.0 #mm
 error_scale_w = 1.0 # environment uncertainty
 error_scale_v = 1.0 # sensor uncertainty
 
-fps = 60.0
+fps = 10.0
 playspeed = 1
 dt = 1/fps
 
