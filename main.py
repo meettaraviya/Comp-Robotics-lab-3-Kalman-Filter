@@ -5,8 +5,8 @@ np.random.seed(0)
 
 # Adrian
 def get_action(t):
-	omega_l = 30
-	omega_r = 10
+	omega_l = 60
+	omega_r = 60
 	
 	return omega_l, omega_r
 
@@ -16,29 +16,37 @@ def get_next_state(s, u):
 	Return the true next state, after wheel slippage.
 	'''
 	# effective wheel speed is normal with standard deviation of 5% max motor speed
-	w_noise = np.random.multivariate_normal(np.zeros((2)), Q)	
+	w_noise = np.random.multivariate_normal(np.zeros((2)), Q)
 	s_ = f_transition(s, u, w_noise)
 	return np.array(s_)
 
 
 def KalmanFilter():
-	s_initial = np.array([250,250, np.pi/4])
-	s_mean = s_initial
+	s_initial = np.array([100,250, 0])
+	
+	# case 1: initial state known exactly
+	# s_mean = s_initial
+	# Sigma = np.zeros((3,3))
 
-	# 3x3
-	Sigma = np.zeros((3,3))
+	# case 2: uncertain initial state knowledge
+	s_mean = s_initial
+	Sigma = 10*np.ones((3,3))
 
 	display_init()
 	display_state(s_initial)
 	display_distribution(s_mean, Sigma)
+	if not display_update():
+		return
 
-	T = 1000
+	s = s_initial
+
+	T = 100
 	for t in range(T):
 
 		u = get_action(t)
 	
 		# just used for getting the observation
-		s_ = get_next_state(s_mean, u)
+		s_ = get_next_state(s, u)
 
 		# time update
 		s_mean_ = f_transition(s_mean, u, (0,0))
@@ -50,7 +58,8 @@ def KalmanFilter():
 
 		display_state(s_)
 		display_distribution(s_mean_, Sigma_)
-		display_update()
+		if not display_update():
+			break
 
 		# observation update
 		o = h_observation(s_, u, generate_v_noise(s_, u))
@@ -67,7 +76,8 @@ def KalmanFilter():
 		
 		display_state(s_)
 		display_distribution(s_mean, Sigma)
-		display_update()
+		if not display_update():
+			break
 
 		print(t)
 

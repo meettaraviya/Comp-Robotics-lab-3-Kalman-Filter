@@ -10,11 +10,11 @@ robot_width = 90.0 #mm
 robot_height = 100.0
 wheel_radius = 25.0 #mm
 
-fps = 60.0
-playspeed = 1.0
+fps = 10.0
+playspeed = 0.1
 dt = 1/fps
 
-point_size = 10
+point_size = 4
 
 # C                B       A
 # |----------------========|
@@ -40,6 +40,7 @@ robot_points = [
 
 # 2x2
 Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] )
+# Q = np.matrix( [[0, 0], [0, 0]] )
 
 # 4x4
 laser_accuracy = 0.04
@@ -142,14 +143,14 @@ def generate_v_noise(s, u):
 	d_front = distances[get_front_wall(s)]
 	d_right = distances_rot[get_front_wall(s_rotated)]
 
-	v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
-	v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
-	omega_o = abs((v_r - v_l)/robot_width)
+	# v_l = (omega_l/60.0) * (np.pi*2*wheel_radius)
+	# v_r = (omega_r/60.0) * (np.pi*2*wheel_radius)
+	# omega_o = abs((v_r - v_l)/robot_width)
 
 	front_noise = np.random.normal(0, laser_accuracy*d_front, 1)[0]
 	right_noise = np.random.normal(0, laser_accuracy*d_right, 1)[0]
 
-	omega_noise = np.random.normal(0, gyro_accuracy*omega_o, 1)[0]
+	omega_noise = np.random.normal(0, gyro_accuracy*max_omega, 1)[0]
 	theta_noise = np.random.normal(0, magn_accuracy*2*np.pi, 1)[0]
 
 	v_noise = front_noise, right_noise, theta_noise, omega_noise
@@ -204,121 +205,121 @@ def get_F(s, u):
 
 # Yuanyuan
 def get_H_for_front(wall_sel, s):
-    x, y, theta = s
-    H = map_height
-    W = map_width
-    pi = np.pi
-    angle_theta = ((theta/pi) % 2 ) *pi 
-    if angle_theta < 0:
-        angle_theta = angle_theta + 2*pi
+	x, y, theta = s
+	H = map_height
+	W = map_width
+	pi = np.pi
+	angle_theta = ((theta/pi) % 2 ) *pi 
+	if angle_theta < 0:
+		angle_theta = angle_theta + 2*pi
 
-    rows = [[-1/np.cos(angle_theta), 0, (W-x)*np.tan(angle_theta)/np.cos(angle_theta)],
-            [0, -1/np.cos(angle_theta-0.5*pi), (H-y)*np.tan(angle_theta-0.5*pi)/np.cos(angle_theta-0.5*pi)],
-            [1/np.cos(angle_theta-pi), 0, x*np.tan(angle_theta-pi)/np.cos(angle_theta-pi)],
-            [0, 1/np.cos(angle_theta-1.5*pi), y*np.tan(angle_theta-1.5*pi)/np.cos(angle_theta-1.5*pi)]]
-    
-    return rows[wall_sel]
+	rows = [[-1/np.cos(angle_theta), 0, (W-x)*np.tan(angle_theta)/np.cos(angle_theta)],
+			[0, -1/np.cos(angle_theta-0.5*pi), (H-y)*np.tan(angle_theta-0.5*pi)/np.cos(angle_theta-0.5*pi)],
+			[1/np.cos(angle_theta-pi), 0, x*np.tan(angle_theta-pi)/np.cos(angle_theta-pi)],
+			[0, 1/np.cos(angle_theta-1.5*pi), y*np.tan(angle_theta-1.5*pi)/np.cos(angle_theta-1.5*pi)]]
+	
+	return rows[wall_sel]
 
 #Yuanyuan
 def get_H_for_right(wall_sel, s):
-    x, y, theta = s
-    H = map_height
-    W = map_width
-    pi = np.pi
-    angle_theta = ((theta/pi) % 2 ) *pi 
-    if angle_theta < 0:
-        angle_theta = angle_theta + 2*pi
+	x, y, theta = s
+	H = map_height
+	W = map_width
+	pi = np.pi
+	angle_theta = ((theta/pi) % 2 ) *pi 
+	if angle_theta < 0:
+		angle_theta = angle_theta + 2*pi
 
-    rows = [[-1/np.cos(angle_theta-0.5*pi), 0, (W-x)*np.tan(angle_theta-0.5*pi)/np.cos(angle_theta-0.5*pi)],
-            [0, -1/np.cos(angle_theta-pi), (H-y)*np.tan(angle_theta-pi)/np.cos(angle_theta-pi)],
-            [1/np.cos(angle_theta-1.5*pi), 0, x*np.tan(angle_theta-1.5*pi)/np.cos(angle_theta-1.5*pi)],
-            [0, 1/np.cos(angle_theta), y*np.tan(angle_theta)/np.cos(angle_theta)]]
-    
-    return rows[wall_sel]
+	rows = [[-1/np.cos(angle_theta-0.5*pi), 0, (W-x)*np.tan(angle_theta-0.5*pi)/np.cos(angle_theta-0.5*pi)],
+			[0, -1/np.cos(angle_theta-pi), (H-y)*np.tan(angle_theta-pi)/np.cos(angle_theta-pi)],
+			[1/np.cos(angle_theta-1.5*pi), 0, x*np.tan(angle_theta-1.5*pi)/np.cos(angle_theta-1.5*pi)],
+			[0, 1/np.cos(angle_theta), y*np.tan(angle_theta)/np.cos(angle_theta)]]
+	
+	return rows[wall_sel]
 
 # Yuanyuan
 def get_H(s):
-    # 4x3
-    x, y, theta = s
-    front_wall_sel = get_front_wall(s)
-    right_wall_sel = get_front_wall([x, y, theta-0.5*np.pi])
-    # 0 = right wall
-    # 1 = top wall
-    # 2 = left wall
-    # 3 = bottom wall
-    d_front = get_H_for_front(front_wall_sel,s)
-    d_right = get_H_for_right(right_wall_sel,s)
+	# 4x3
+	x, y, theta = s
+	front_wall_sel = get_front_wall(s)
+	right_wall_sel = get_front_wall([x, y, theta-0.5*np.pi])
+	# 0 = right wall
+	# 1 = top wall
+	# 2 = left wall
+	# 3 = bottom wall
+	d_front = get_H_for_front(front_wall_sel,s)
+	d_right = get_H_for_right(right_wall_sel,s)
 
-    n_theta = [0,0,1]
-    omega = [0, 0, 1/dt] #since omega is independent of x,y,theta; the derivative should be 0
+	n_theta = [0,0,1]
+	omega = [0, 0, 1/dt] #since omega is independent of x,y,theta; the derivative should be 0
 
-    H = [d_front, d_right, n_theta, omega]
+	H = [d_front, d_right, n_theta, omega]
 
 
-    return np.matrix(H)
+	return np.matrix(H)
 
 
 # Yuanyuan
 def get_V(s):
-    # 4x4
-    V = [[1,0,0,0],
-         [0,1,0,0],
-         [0,0,1,0],
-         [0,0,0,1]]
+	# 4x4
+	V = [[1,0,0,0],
+		 [0,1,0,0],
+		 [0,0,1,0],
+		 [0,0,0,1]]
 
-    return np.matrix(V)
+	return np.matrix(V)
 
 
 # Yuanyuan
 def get_wall_distances(s):
-    x, y, theta = s
-    pi = np.pi
+	x, y, theta = s
+	pi = np.pi
 
-    H = map_height
-    W = map_width
-    
-    angle_theta = ((theta/pi) % 2 ) *pi 
-    if angle_theta < 0:
-        angle_theta = angle_theta + 2*pi
+	H = map_height
+	W = map_width
+	
+	angle_theta = ((theta/pi) % 2 ) *pi 
+	if angle_theta < 0:
+		angle_theta = angle_theta + 2*pi
 
-    if angle_theta in [0, pi, 2*pi]:
-        d_t = np.inf
-        d_b = np.inf
-        d_r = W-x
-        d_l = -x
-        if angle_theta == pi:
-            d_r = -d_r
-            d_l = -d_l
-    elif angle_theta in [0.5*pi, 1.5*pi]:
-        d_r = np.inf
-        d_l = np.inf
-        d_t = H-y
-        d_b = -y
-        if angle_theta == 1.5*pi:
-            d_t = -d_t
-            d_b = -d_b
-    elif angle_theta >= 0 and angle_theta <= 0.5*pi:
-        d_r = (W-x)  / np.cos(angle_theta)
-        d_l = -x     / np.cos(angle_theta)	
-        d_t = (H-y)  / np.cos(angle_theta-0.5*pi)
-        d_b = -y     / np.cos(angle_theta-0.5*pi)
-    elif angle_theta >= 0.5*pi and angle_theta <= pi:
-        d_r = -(W-x) / np.cos(angle_theta-pi)
-        d_l =  x     / np.cos(angle_theta-pi)
-        d_t = (H-y)  / np.cos(angle_theta-0.5*pi)
-        d_b = -y     / np.cos(angle_theta-0.5*pi)
-    elif angle_theta >= pi and angle_theta <= 1.5*pi:
-        d_r = -(W-x) / np.cos(angle_theta-pi)
-        d_l =  x     / np.cos(angle_theta-pi)
-        d_t = -(H-y) / np.cos(angle_theta-1.5*pi)
-        d_b =  y     / np.cos(angle_theta-1.5*pi)
-    elif angle_theta >= 1.5*pi and angle_theta <= 2*pi:
-        d_r = (W-x)  / np.cos(angle_theta)
-        d_l = -x     / np.cos(angle_theta)
-        d_t = -(H-y) / np.cos(angle_theta-1.5*pi)
-        d_b =  y     / np.cos(angle_theta-1.5*pi)
+	if angle_theta in [0, pi, 2*pi]:
+		d_t = np.inf
+		d_b = np.inf
+		d_r = W-x
+		d_l = -x
+		if angle_theta == pi:
+			d_r = -d_r
+			d_l = -d_l
+	elif angle_theta in [0.5*pi, 1.5*pi]:
+		d_r = np.inf
+		d_l = np.inf
+		d_t = H-y
+		d_b = -y
+		if angle_theta == 1.5*pi:
+			d_t = -d_t
+			d_b = -d_b
+	elif angle_theta >= 0 and angle_theta <= 0.5*pi:
+		d_r = (W-x)  / np.cos(angle_theta)
+		d_l = -x     / np.cos(angle_theta)	
+		d_t = (H-y)  / np.cos(angle_theta-0.5*pi)
+		d_b = -y     / np.cos(angle_theta-0.5*pi)
+	elif angle_theta >= 0.5*pi and angle_theta <= pi:
+		d_r = -(W-x) / np.cos(angle_theta-pi)
+		d_l =  x     / np.cos(angle_theta-pi)
+		d_t = (H-y)  / np.cos(angle_theta-0.5*pi)
+		d_b = -y     / np.cos(angle_theta-0.5*pi)
+	elif angle_theta >= pi and angle_theta <= 1.5*pi:
+		d_r = -(W-x) / np.cos(angle_theta-pi)
+		d_l =  x     / np.cos(angle_theta-pi)
+		d_t = -(H-y) / np.cos(angle_theta-1.5*pi)
+		d_b =  y     / np.cos(angle_theta-1.5*pi)
+	elif angle_theta >= 1.5*pi and angle_theta <= 2*pi:
+		d_r = (W-x)  / np.cos(angle_theta)
+		d_l = -x     / np.cos(angle_theta)
+		d_t = -(H-y) / np.cos(angle_theta-1.5*pi)
+		d_b =  y     / np.cos(angle_theta-1.5*pi)
 
-    return d_r, d_t, d_l, d_b
+	return d_r, d_t, d_l, d_b
 
 
 def display_init():
@@ -351,12 +352,12 @@ def display_state(s):
 def display_sample_state(s):
 	global screen
 	x, y, h = s
-	pygame.draw.circle(screen, (0,255,0), (round(float(x)), round(float(y))), 10)
-	pygame.draw.line(screen, (0,255,0), (round(float(x)), round(float(y))), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), 4)
+	pygame.draw.circle(screen, (0,255,0), (round(float(x)), round(float(y))), point_size)
+	pygame.draw.line(screen, (0,255,0), (round(float(x)), round(float(y))), (round(x+2*point_size*np.cos(h)), round(y+2*point_size*np.sin(h))), point_size//2)
 
 
 def display_distribution(s_mean, Sigma):
-	for state in np.random.multivariate_normal(s_mean, Sigma, 100):
+	for state in np.random.multivariate_normal(s_mean, Sigma, 10):
 		display_sample_state(state)
 
 
@@ -365,3 +366,12 @@ def display_update():
 	pygame.display.flip()
 	clock.tick(round(fps * playspeed))
 	screen.blit(background, (0, 0))
+	
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT:
+			return False
+		if event.type == pygame.KEYDOWN:
+			if event.key == pygame.K_ESCAPE or event.unicode == 'q':
+				return False
+
+	return True
