@@ -2,14 +2,42 @@ import numpy as np
 from dynamics import *
 from trajectories import *
 
-np.random.seed(0)
+def get_action(s, t):
+	# # Case 1
+	# # omega_l = 60
+	# # omega_r = 40
 
-def get_action(t):
+	# # Case 2
+	# # omega_l = 60
+	# # omega_r = 30
+
+	# # Case 3
+	# # omega_l = 60
+	# # omega_r = 60
+
+	# # Case 4
+	# # omega_l = 60
+	# # omega_r = -60
+
+	# # Case 5
+	# omega_l = 25 * np.cos(2*np.pi*t/180)
+	# omega_r = 25 * np.sin(np.pi*t/180)
+
+	# # print(omega_l, omega_r)
+
+	x, y, theta = s
+
+	if x < 0 or x > map_width or y < 0 or y > map_height:
+		return None
+	
+	# return omega_l, omega_r
+
 	# return straight_line(t)
 	# return circle(t)
 	# return no_movement(t)
-	return big_circle(t)
-	# return square(t)
+	# return big_circle(t)
+	return square(t)
+	
 
 # Andrew
 def get_next_state(s, u):
@@ -23,19 +51,30 @@ def get_next_state(s, u):
 
 
 def KalmanFilter():
-	s_initial = np.array([250,250, 0])
+
+	# very interesting phenomenon
+	# np.random.seed(0)
+
+	# very interesting phenomenon
+	# np.random.seed(10)
+
+	s_initial = np.array([100,250, np.pi/2])
 	
 	# case 1: initial state known exactly
 	s_mean = s_initial
 	Sigma = np.zeros((3,3))
 
 	# case 2: uncertain initial state knowledge
+	s_mean = s_initial
+	Sigma = np.eye(3)
+	Sigma[0,0] = 20
+	Sigma[1,1] = 20
 	# s_mean = s_initial
 	# Sigma = 10*np.ones((3,3))
 
 	display_init()
-	display_state(s_initial)
 	display_distribution(s_mean, Sigma)
+	display_state(s_initial)
 	if not display_update():
 		return
 
