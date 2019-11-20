@@ -45,7 +45,7 @@ Q = np.matrix( [[0.05*60, 0], [0, 0.05*60]] )
 # 4x4
 laser_accuracy = 0.04
 gyro_accuracy = 0.03
-magn_accuracy = 0.625
+magn_accuracy = 0.0625
 
 max_dist = np.sqrt( map_height**2 + map_width**2 )
 
@@ -73,7 +73,7 @@ def f_transition(s, u, w_noise):
 
 	v = (v_l + v_r) / 2
 	
-	theta_ = theta + (dt*omega)
+	theta_ = (theta + (dt*omega)) % (2*np.pi)
 	x_ = x + (dt * v * np.cos(theta))
 	y_ = y + (dt * v * np.sin(theta))
 

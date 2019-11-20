@@ -6,7 +6,7 @@ np.random.seed(0)
 # Adrian
 def get_action(t):
 	omega_l = 60
-	omega_r = 60
+	omega_r = 0
 	
 	return omega_l, omega_r
 
@@ -25,12 +25,12 @@ def KalmanFilter():
 	s_initial = np.array([100,250, 0])
 	
 	# case 1: initial state known exactly
-	# s_mean = s_initial
-	# Sigma = np.zeros((3,3))
+	s_mean = s_initial
+	Sigma = np.zeros((3,3))
 
 	# case 2: uncertain initial state knowledge
-	s_mean = s_initial
-	Sigma = 10*np.ones((3,3))
+	# s_mean = s_initial
+	# Sigma = 10*np.ones((3,3))
 
 	display_init()
 	display_state(s_initial)
@@ -39,6 +39,7 @@ def KalmanFilter():
 		return
 
 	s = s_initial
+	print(s)
 
 	T = 100
 	for t in range(T):
@@ -79,40 +80,9 @@ def KalmanFilter():
 		if not display_update():
 			break
 
-		print(t)
+		print(t+1, s, s_mean)
 
 
-tester = "meet"
 
-if __name__ == "__main__" and tester == "andrew":
-	# Andrew's testing space
-	print("Starting h_observation tests.")
-	s = [(0,0,0)]
-	u = [(0,0), (60,60), (-60,-60), (60,-60), (-60,60), (40,20), (-30,30), (0,1)]
-	sign = [0, 0, 0, -1, +1, -1, +1, +1]
-	for state in s:
-		for action in u:
-			h = h_observation(state,action,(0,0,0,0))
-			assert(np.sign(h[3]) == sign[u.index(action)])
-			print(state, action, h)
-	print("Ending h_observation tests.")
-	print("-------------------------------------------")
-	print("Starting generate_v_noise tests.")
-	for state in s:
-		for action in u:
-			v = generate_v_noise(state, action)
-			print(v)
-	print("Ending generate_v_noise tests.")
-
-	display_init()
-	display_sample_state((0,0,0))
-
-elif __name__ == "__main__" and tester == "meet":
+if __name__ == "__main__":
 	KalmanFilter()
-	pass
-
-elif __name__ == "__main__" and tester == "yy":
-	pass
-
-elif __name__ == "__main__" and tester == "adrian":
-	pass
